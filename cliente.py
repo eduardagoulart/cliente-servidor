@@ -1,5 +1,6 @@
 import socket
 from trata_dados import ProcessaDadosURL
+import re
 
 """
 HOST = ''
@@ -38,8 +39,7 @@ while True:
 
 def http_get(host, path):
     request = []
-    print(f'Host: {host}, type: {type(host)}')
-    print(f'path: {path}, type: {type(path)}')
+
     addr = socket.getaddrinfo(host, 80)[0][-1]
     s = socket.socket()
     s.connect(addr)
@@ -51,7 +51,32 @@ def http_get(host, path):
         else:
             break
     s.close()
+    f = open("request.txt", 'w')
+    for i in request:
+
+        f.write(i)
     return request
+
+
+def retira_cabecalho(request):
+    separador = 0
+    cabecalho = []
+
+    while '<!DOCTYPE html>' not in request[separador]:
+        # cabecalho.append(request[separador])
+        # print(cabecalho)
+        separador += 1
+
+    corpo = []
+    for i in range(0, len(request)):
+        if i < separador:
+            cabecalho.append(request[i])
+        else:
+            corpo.append(request[i])
+
+    # corpo = corpo[1:]
+
+    return cabecalho, corpo
 
 
 if '__main__' == __name__:
@@ -59,9 +84,28 @@ if '__main__' == __name__:
     host, path = ProcessaDadosURL(url).separa_nome_diretorio()
     reply = http_get(host, path)
 
+    cabecalho, request = retira_cabecalho(reply)
+
     j = ''
-    for i in reply:
+    k = ''
+    for i in request:
+        if '<!DOCTYPE' in i:
+
+            aux = i.split('\n')[4:]
+            print(aux)
+            for t in aux:
+                k += t
+            j +=k
+            continue
         j += i
 
     f = open("cliente.html", 'w')
     f.write(str(j))
+
+    q = ''
+    for i in cabecalho:
+        q += i
+
+    f = open("cliente.txt", 'w')
+    f.write(str(q))
+
