@@ -22,21 +22,21 @@ class ProcessaDadosURL:
         tamanho_nome = 0
         for i in range(len(url)):
             tamanho_nome += 1
-            if i == '/':
+            if url[i] == '/':
                 break
 
         nome_do_site = []
         diretorio = []
-        for i in range(0, tamanho_nome):
+        for i in range(len(url)):
             if i < tamanho_nome:
                 nome_do_site.append(url[i])
             else:
                 diretorio.append(url[i])
 
+        nome_do_site.pop()
         nome_do_site = ''.join(nome_do_site)
         diretorio = ''.join(diretorio)
-
         return nome_do_site, diretorio
 
 
-ProcessaDadosURL('http://www.presidentesjdr.com.br/linhasehorarios.html').separa_nome_diretorio()
+ProcessaDadosURL('http://www.presidentesjdr.com.br/portal/').separa_nome_diretorio()
