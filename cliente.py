@@ -1,40 +1,5 @@
 import socket
 from trata_dados import ProcessaDadosURL
-import re
-
-"""
-HOST = ''
-PORT = 8888
-
-listen_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-listen_socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-listen_socket.bind((HOST, PORT))
-listen_socket.listen(1)
-
-print(f'Serving HTTP on PORT {PORT}')
-
-while True:
-    cliente_connection, cliente_address = listen_socket.accept()
-    request = cliente_connection.recv(1024).decode('utf-8')
-    print(f"Request: {request}")
-
-    http_response = """\
-# HTTP/1.1 200 OK
-
-# Hello, World!
-"""
-    string_list = request.split(' ')     # Split request from spaces
-
-    method = string_list[0] # First string is a method
-    requesting_file = string_list[1] #Second string is request file
-
-    print('Client request ',requesting_file)
-
-    cliente_connection.close()
-    # http_response = str.encode(http_response)
-    # cliente_connection.sendall(http_response.encode('utf-8'))
-    # cliente_connection.close()
-"""
 
 
 def http_get(host, path):
@@ -53,7 +18,6 @@ def http_get(host, path):
     s.close()
     f = open("request.txt", 'w')
     for i in request:
-
         f.write(i)
     return request
 
@@ -63,8 +27,6 @@ def retira_cabecalho(request):
     cabecalho = []
 
     while '<!DOCTYPE html>' not in request[separador]:
-        # cabecalho.append(request[separador])
-        # print(cabecalho)
         separador += 1
 
     corpo = []
@@ -74,9 +36,13 @@ def retira_cabecalho(request):
         else:
             corpo.append(request[i])
 
-    # corpo = corpo[1:]
-
     return cabecalho, corpo
+
+
+def analisa_erro(response):
+    erros = ["302 Found", "502 Bad Gateway", "404 Not Found", "301 Moved Permanently", "401 Unauthorized",
+             "400 Bad Request", "403 Forbidden", "500 Internal Server Error", "504 Gateway Timeout",
+             "501 Not Implemented", "502 Bad Gateway", "503 Service Unavailable"]
 
 
 if '__main__' == __name__:
@@ -92,20 +58,18 @@ if '__main__' == __name__:
         if '<!DOCTYPE' in i:
 
             aux = i.split('\n')[4:]
-            print(aux)
             for t in aux:
                 k += t
-            j +=k
+            j += k
             continue
         j += i
 
-    f = open("cliente.html", 'w')
+    f = open("index.html", 'w')
     f.write(str(j))
 
     q = ''
     for i in cabecalho:
         q += i
-
+    print(q)
     f = open("cliente.txt", 'w')
     f.write(str(q))
-
