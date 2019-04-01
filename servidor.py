@@ -22,7 +22,7 @@ while True:
     myfile = requesting_file.split('?')[0] # After the "?" symbol not relevent here
     myfile = myfile.lstrip('/')
     if myfile == '':
-        myfile = 'teste.html'    # Load index file as default
+        myfile = 'index.html'    # Load index file as default
 
     try:
         file = open(myfile, 'rb') # open file , r => read , b => byte format

@@ -15,6 +15,7 @@ def http_get(host, path):
             request.append(str(data, 'utf-8'))
         else:
             break
+    print(data)
     s.close()
     f = open("request.txt", 'w')
     for i in request:
@@ -26,7 +27,7 @@ def retira_cabecalho(request):
     separador = 0
     cabecalho = []
 
-    while '<!DOCTYPE html>' not in request[separador]:
+    while '<!DOCTYPE html' not in request[separador]:
         separador += 1
 
     corpo = []
@@ -46,7 +47,7 @@ def analisa_erro(response):
 
 
 if '__main__' == __name__:
-    url = 'http://www.viacaopresidente.com.br/portal/'
+    url = 'http://cenozoicforaminifera.com/'
     host, path = ProcessaDadosURL(url).separa_nome_diretorio()
     reply = http_get(host, path)
 
