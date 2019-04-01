@@ -41,9 +41,22 @@ def retira_cabecalho(request):
 
 
 def analisa_erro(response):
-    erros = ["302 Found", "502 Bad Gateway", "404 Not Found", "301 Moved Permanently", "401 Unauthorized",
-             "400 Bad Request", "403 Forbidden", "500 Internal Server Error", "504 Gateway Timeout",
-             "501 Not Implemented", "502 Bad Gateway", "503 Service Unavailable"]
+    erros = {"302": "302 Found",
+             "404": "404 Not Found",
+             "301": "301 Moved Permanently",
+             "401": "401 Unauthorized",
+             "400": "400 Bad Request",
+             "403": "403 Forbidden",
+             "500": "500 Internal Server Error",
+             "504": "504 Gateway Timeout",
+             "501": "501 Not Implemented",
+             "502": "502 Bad Gateway",
+             "503": "503 Service Unavailable"}
+
+    response = response[0].split(" ")
+    if response[1] in erros.keys():
+        print(erros[response[1]])
+        exit(1)
 
 
 if '__main__' == __name__:
@@ -52,6 +65,8 @@ if '__main__' == __name__:
     reply = http_get(host, path)
 
     cabecalho, request = retira_cabecalho(reply)
+
+    analisa_erro(cabecalho)
 
     j = ''
     k = ''
@@ -71,6 +86,6 @@ if '__main__' == __name__:
     q = ''
     for i in cabecalho:
         q += i
-    print(q)
+    # print(q)
     f = open("cliente.txt", 'w')
     f.write(str(q))
