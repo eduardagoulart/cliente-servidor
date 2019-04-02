@@ -92,7 +92,7 @@ def analisa_erro(response):
 
 
 if '__main__' == __name__:
-    url = 'http://cenozoicforaminifera.com/'
+    url = 'http://cenozoicforaminifera.com/sites/cenozoicforaminifera.com/files/styles/slideshow_large/public/Serra-Kiel.jpg?itok=bnHuaBhU'
     host, path = ProcessaDadosURL(url).separa_nome_diretorio()
     reply = http_get(host, path)
 
