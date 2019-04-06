@@ -1,50 +1,11 @@
 import socket
+import sys, os
+import select
 from trata_dados import ProcessaDadosURL
 
 
-def http_get(host, path):
-    request = []
-
-    addr = socket.getaddrinfo(host, 80)[0][-1]
-    s = socket.socket()
-    s.connect(addr)
-
-    s.send(bytes('GET /%s HTTP/1.0\r\nHost: %s\r\n\r\n' % (path, host), 'utf8'))
-    while True:
-        data = s.recv(100)
-        if data:
-            request.append(str(data, 'utf-8'))
-        else:
-            break
-    s.close()
-    f = open("request.txt", 'w')
-    for i in request:
-        f.write(i)
-    return request
-
-
-def retira_cabecalho(request):
-    separador = 0
-    cabecalho = []
-
-    try:
-        while '<!DOCTYPE html' not in request[separador]:
-            separador += 1
-
-        corpo = []
-        for i in range(0, len(request)):
-            if i < separador:
-                cabecalho.append(request[i])
-            else:
-                corpo.append(request[i])
-
-        return cabecalho, corpo
-
-    except:
-        return "não há cabeçalho"
-
-
 def nome_sem_diretorio(url):
+    url = url.decode()
     try:
         p = url.index('www')
         i = 5
@@ -58,18 +19,19 @@ def nome_sem_diretorio(url):
         if i >= len(url) - 1:
             break
 
-    return ''.join(nome) + '.html'
+    return 'Downloads/' + ''.join(nome) + '.html'
 
 
 def nome_com_diretorio(path):
+    path = path.decode()
     extensoes = ['.txt', '.mp3', '.pdf', '.html', '.jpg', '.png']
-    i = 0
     path = path.split('/')
-    while i < len(extensoes):
-        if path[len(path) - 1].index(extensoes[i]):
-            return path[len(path) - 1]
-        i = i + 1
-    return "arquivo_generico"
+    for nome in path:
+        if len(nome) > 4:
+            if nome[-4:] in extensoes:
+                return 'Downloads/' + nome
+
+    return "Downloads/arquivo_generico"
 
 
 def analisa_erro(response):
@@ -85,59 +47,66 @@ def analisa_erro(response):
              "502": "502 Bad Gateway",
              "503": "503 Service Unavailable"}
 
-    response = response[0].split(" ")
-    if response[1] in erros.keys():
-        print(erros[response[1]])
+    if response in erros.keys():
+        print(erros[response])
         exit(1)
 
 
-if '__main__' == __name__:
-    url = 'http://cenozoicforaminifera.com/sites/cenozoicforaminifera.com/files/styles/slideshow_large/public/Serra-Kiel.jpg?itok=bnHuaBhU'
-    host, path = ProcessaDadosURL(url).separa_nome_diretorio()
-    reply = http_get(host, path)
+# :TODO concecta site e conecta home
+# :TODO implementar conexeõs diferentes e pronto
+def conecta(con, host, path, porta):
+    s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    s.connect((con, int(porta)))
+    host, path = host.encode(), path.encode()
+    s.sendall(b'GET /%b HTTP/1.1\r\nHOST: %b\r\n\r\n' % (path, host))
 
-    cabecalho, request = retira_cabecalho(reply)
+    reply = b''
 
-    analisa_erro(cabecalho)
-    if len(path) == 0:
-        nome_arquivo = nome_sem_diretorio(host)
-        arquivo_saida = open(nome_arquivo, 'w')
-        j = ''
-        k = ''
-        for i in request:
-            if '<!DOCTYPE' in i:
+    while select.select([s], [], [], 3)[0]:
+        data = s.recv(2048)
+        if not data:
+            break
+        reply += data
+    print(reply)
 
-                aux = i.split('\n')[4:]
-                for t in aux:
-                    k += t
-                j += k
-                continue
-            j += i
+    headers = reply.split(b'\r\n\r\n')[0]
+    image = reply[len(headers) + 4:]
+
+    erro = headers.decode().split()
+    analisa_erro(erro[1])
+
+    if len(path) != 0:
+        nome_arq = nome_com_diretorio(path)
+
+
+        arq_saida = open(nome_arq, 'wb')
     else:
-        nome_arquivo = nome_com_diretorio(path)
-        arquivo_saida = open(nome_arquivo, 'w')
-        j = request
+        nome_arq = nome_sem_diretorio(host)
+        # diretorio = os.mkdir(nome_arq[:-4])
+        # print(type(diretorio))
+        # diretorio = str(diretorio) + nome_arq
+        arq_saida = open(nome_arq, 'wb')
 
-    arquivo_saida.write(str(j))
+    arq_saida.write(image)
+    arq_saida.close()
 
-    j = ''
-    k = ''
-    for i in request:
-        if '<!DOCTYPE' in i:
 
-            aux = i.split('\n')[4:]
-            for t in aux:
-                k += t
-            j += k
-            continue
-        j += i
+if '__main__' == __name__:
+    conexao = sys.argv[1]  # vai pegar a opção navegador ou servidor
+    url = sys.argv[2]
+    try:
+        porta = sys.argv[3]  # porta que será utilizada
+    except:
+        porta = 80
 
-    f = open("index.html", 'w')
-    f.write(str(j))
+    if conexao == 'navegador':
+        host, path = ProcessaDadosURL(url).separa_nome_diretorio()
+        print(host)
+        conecta(host, host, path, porta)
+    elif conexao == 'servidor':
+        host, path = ProcessaDadosURL(url).separa_nome_diretorio()
+        conecta('127.0.0.1', host, path, porta)
 
-    q = ''
-    for i in cabecalho:
-        q += i
-    print(q)
-    f = open("cliente.txt", 'w')
-    f.write(str(q))
+    else:
+        print("Opção inválida!")
+        exit(404)
