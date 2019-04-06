@@ -1,5 +1,5 @@
 import socket
-import sys, os
+import sys
 import select
 from trata_dados import ProcessaDadosURL
 
@@ -52,11 +52,9 @@ def analisa_erro(response):
         exit(1)
 
 
-# :TODO concecta site e conecta home
-# :TODO implementar conexeõs diferentes e pronto
-def conecta(con, host, path, porta):
+def conecta_site(host, path, porta):
     s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    s.connect((con, int(porta)))
+    s.connect((host, int(porta)))
     host, path = host.encode(), path.encode()
     s.sendall(b'GET /%b HTTP/1.1\r\nHOST: %b\r\n\r\n' % (path, host))
 
@@ -70,25 +68,42 @@ def conecta(con, host, path, porta):
     print(reply)
 
     headers = reply.split(b'\r\n\r\n')[0]
-    image = reply[len(headers) + 4:]
+    mensagem = reply[len(headers) + 4:]
 
     erro = headers.decode().split()
     analisa_erro(erro[1])
 
     if len(path) != 0:
         nome_arq = nome_com_diretorio(path)
-
-
         arq_saida = open(nome_arq, 'wb')
     else:
         nome_arq = nome_sem_diretorio(host)
-        # diretorio = os.mkdir(nome_arq[:-4])
-        # print(type(diretorio))
-        # diretorio = str(diretorio) + nome_arq
         arq_saida = open(nome_arq, 'wb')
 
-    arq_saida.write(image)
+    arq_saida.write(mensagem)
     arq_saida.close()
+
+
+def conecta_servidor(busca, porta):
+    s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    s.connect(('127.0.0.1', int(porta)))
+    busca = busca.encode()
+
+    s.sendall(b'GET /Downloads/%b HTTP/1.1\r\n' % (busca))
+
+    reply = b''
+
+    while select.select([s], [], [], 3)[0]:
+        data = s.recv(2048)
+        if not data:
+            break
+        reply += data
+    print(reply)
+
+    headers = reply.split(b'\r\n\r\n')[0]
+
+    erro = headers.decode().split()
+    analisa_erro(erro[1])
 
 
 if '__main__' == __name__:
@@ -101,11 +116,15 @@ if '__main__' == __name__:
 
     if conexao == 'navegador':
         host, path = ProcessaDadosURL(url).separa_nome_diretorio()
-        print(host)
-        conecta(host, host, path, porta)
+        conecta_site(host, path, porta)
     elif conexao == 'servidor':
+        # print('ola')
         host, path = ProcessaDadosURL(url).separa_nome_diretorio()
-        conecta('127.0.0.1', host, path, porta)
+        print(f'host: {host}, path: {path}')
+        print(f'url: {url}')
+        # url = url[10:]
+
+        conecta_servidor(url, porta)
 
     else:
         print("Opção inválida!")

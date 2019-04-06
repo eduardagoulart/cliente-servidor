@@ -16,7 +16,7 @@ def handle_client_connection(connection):
     print(myfile)
     myfile = myfile.lstrip('/')
     if myfile == '':
-        myfile = 'Downloads/index.html'  # Load index file as default
+        myfile = '/index.html'  # Load index file as default
 
     try:
         file = open(myfile, 'rb')  # open file , r => read , b => byte format
