@@ -7,15 +7,20 @@ class ProcessaDadosURL:
     """
 
     def le_url(self):
-        if "http://" not in self.url:
-            print("Site inválido, por favor tente outro")
-            exit(400)
-        url = self.url.split("http://")
+        if 'http://' in self.url:
+            url = self.url.split("http://")
 
-        if len(url) > 1:
-            url.pop(0)
-            url = url[0]
-        return url
+            if len(url) > 1:
+                url.pop(0)
+                url = url[0]
+            return url
+        if 'www' in self.url:
+            url = self.url.split("www")
+            if len(url) > 1:
+                url.pop(0)
+                url = url[0][1:]
+            return url
+        return self.url
 
     def separa_nome_diretorio(self):
         url = self.le_url()
@@ -39,4 +44,4 @@ class ProcessaDadosURL:
         return nome_do_site, diretorio
 
 
-ProcessaDadosURL('http://www.presidentesjdr.com.br/portal/').separa_nome_diretorio()
+ProcessaDadosURL('www.presidentesjdr.com.br/portal/').separa_nome_diretorio()
